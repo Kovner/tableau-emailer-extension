@@ -49,7 +49,6 @@ class Configure extends Component {
             console.error('there was an error saving');
         });
         window.tableau.extensions.ui.closeDialog('');
-
     }
 
     render() {

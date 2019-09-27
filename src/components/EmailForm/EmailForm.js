@@ -11,9 +11,10 @@ class EmailForm extends Component {
     this.state = {
       message: '',
       subject: '',
-      disabled: false,
+      disabled: true,
+      buttonMessage: "Send Email",
       selectedEmails: [],
-      selectedMarksDTs: []
+      selectedMarksDT: []
     };
 
     this.getSelectedMarks = this.getSelectedMarks.bind(this);
@@ -24,43 +25,50 @@ class EmailForm extends Component {
   }
 
   handleMessageChange(event) {
-    this.setState({message: event.target.value});
+    let disabled = true;
+    if(event.target.value != '' && this.state.subject != '') {
+      disabled = false;
+    }
+    this.setState({
+      message: event.target.value,
+      disabled: disabled,
+      buttonMessage: "Send Email"
+    });
   }
   handleSubjectChange(event) {
-    this.setState({subject: event.target.value});
+    let disabled = true;
+    if(event.target.value != '' && this.state.message != '') {
+      disabled = false;
+    }
+    this.setState({
+      subject: event.target.value,
+      disabled: disabled,
+      buttonMessage: "Send Email"
+    });
   }
 
   async getSelectedMarks() {
     let selectedMarksDTs = [];
-    // const emailField = window.tableau.extensions.settings.get('emailField');
-    // if(!emailField) { return []; }
     const ext = window.tableau.extensions;
     const worksheets = ext.dashboardContent.dashboard.worksheets;
     const marksPromises = worksheets.map(async ws => {
         const marks = await ws.getSelectedMarksAsync();
         selectedMarksDTs.push(marks.data[0]);
-        // const dataTable = marks.data[0];
-        // const field = dataTable.columns.find( col => col.fieldName === emailField);
-        // dataTable.data.map( row => {
-        //   selectedEmails.push(row[field.index].value);
-        // });
     });
     await Promise.all(marksPromises);
     console.log(selectedMarksDTs);
     return selectedMarksDTs;
   }
 
-  getEmailsFromMarks(marksDTs) {
+  getEmailsFromMarks(marksDT) {
     let selectedEmails = [];
     const emailField = window.tableau.extensions.settings.get('emailField');
     if(!emailField) { return []; }
-    for(const DT of marksDTs) {
-      const field = DT.columns.find( col => col.fieldName === emailField);
-      if(field) {
-        DT.data.map( row => {
-          selectedEmails.push(row[field.index].value);
-        });
-      }
+    const field = marksDT.columns.find( col => col.fieldName === emailField);
+    if(field) {
+      marksDT.data.map( row => {
+        selectedEmails.push(row[field.index].value);
+      });
     }
     //get uniques
     selectedEmails = [...new Set(selectedEmails)];
@@ -71,31 +79,66 @@ class EmailForm extends Component {
   async componentDidMount() {
     await window.tableau.extensions.initializeDialogAsync();
     const marksDTs = await this.getSelectedMarks();
-    const selectedEmails = this.getEmailsFromMarks(marksDTs);
+    //Only one DT actually will have selected marks in it, so let's filter...
+    const marksDT = marksDTs.find(marksDT => marksDT.columns.length > 0);
+    const selectedEmails = this.getEmailsFromMarks(marksDT);
+    console.log(marksDT);
     this.setState({ 
       selectedEmails: selectedEmails,
-      selectedMarksDTs: marksDTs 
+      selectedMarksDT: marksDT
     });
   }
   
-  async handleSubmit() {
-    console.log('submitting: ');
-    console.log(this.state);
-    // const subjectPlaceholders = this.findPlaceholders(this.state.subject);
-    // const messagePlaceholders = this.findPlaceholders(this.state.message);
+  // async handleSubmit(event) {
+  //   event.preventDefault();
+  //   console.log('submitting: ');
+  //   console.log(this.state);
 
-    try {
-        await axios.post('http://localhost:3030/api/email', {
-            to_addresses: this.state.selectedEmails,
-            from_address: 'mike.kovner@gmail.com',
-            subject: this.state.subject,
-            message: this.state.message
-        });
-        // window.tableau.extensions.ui.closeDialog();
-    } catch (err) {
-        console.error(err.response);
-        // window.tableau.extensions.ui.closeDialog();
-    }
+  //   try {
+  //       await axios.post('http://localhost:3030/api/email', {
+  //           to_addresses: this.state.selectedEmails,
+  //           from_address: 'mike.kovner@gmail.com',
+  //           subject: this.state.subject,
+  //           message: this.state.message
+  //       });
+  //       this.setState({
+  //         subject: '', 
+  //         message: '', 
+  //         disabled: true,
+  //         buttonMessage: "Email Sent"
+  //       });
+  //       // window.tableau.extensions.ui.closeDialog();
+  //   } catch (err) {
+  //       console.error(err.response);
+  //       // window.tableau.extensions.ui.closeDialog();
+  //   }
+  // }
+
+  async handleSubmit(event) {
+    // event.preventDefault();
+    // console.log('submitting: ');
+    // console.log(this.state);
+
+    // this.state.selectedMarksDTs
+
+    // try {
+    //     await axios.post('http://localhost:3030/api/email', {
+    //         to_addresses: this.state.selectedEmails,
+    //         from_address: 'mike.kovner@gmail.com',
+    //         subject: this.state.subject,
+    //         message: this.state.message
+    //     });
+    //     this.setState({
+    //       subject: '', 
+    //       message: '', 
+    //       disabled: true,
+    //       buttonMessage: "Email Sent"
+    //     });
+    //     // window.tableau.extensions.ui.closeDialog();
+    // } catch (err) {
+    //     console.error(err.response);
+    //     // window.tableau.extensions.ui.closeDialog();
+    // }
   }
 
   render() {
@@ -106,10 +149,11 @@ class EmailForm extends Component {
     );
     toLine = toLine.slice(2);
     return (
+      <div>
+        <p>
+          To: { toLine }
+        </p>
         <Form onSubmit={this.handleSubmit}>
-          <p>
-            To: { toLine }
-          </p>
           <Form.Group>
             <Form.Label htmlFor="subject">Subject</Form.Label>
             <Form.Control id="subject" name="subject" type="text" value={this.state.subject} onChange={this.handleSubjectChange}/>
@@ -118,10 +162,11 @@ class EmailForm extends Component {
             <Form.Label htmlFor="message">Message</Form.Label>
             <Form.Control id="message" name="message" as="textarea" rows="20" value={this.state.message} onChange={this.handleMessageChange}/>
           </Form.Group>
-          <Button className="d-inline-block" variant="primary" type="submit">
-            Send Email
+          <Button className="d-inline-block" variant="primary" type="submit" disabled={this.state.disabled}>
+            {this.state.buttonMessage}
           </Button>
         </Form>
+      </div>
     );
   }
 }
