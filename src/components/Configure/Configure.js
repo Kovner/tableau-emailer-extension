@@ -40,9 +40,16 @@ class Configure extends Component {
     handleSubmit() {
         console.log(this.state.emailColumn);
         window.tableau.extensions.settings.set('emailField', this.state.emailColumn);
+        //TODO:Why isn't this closing?!
         window.tableau.extensions.settings.saveAsync().then( () => {
+            console.log('saved email field');
             window.tableau.extensions.ui.closeDialog('');
+        })
+        .catch( (err) => {
+            console.error('there was an error saving');
         });
+        window.tableau.extensions.ui.closeDialog('');
+
     }
 
     render() {

@@ -12,10 +12,12 @@ class EmailForm extends Component {
       message: '',
       subject: '',
       disabled: false,
-      selectedEmails: []
+      selectedEmails: [],
+      selectedMarksDTs: []
     };
 
-    this.getSelectedEmails = this.getSelectedEmails.bind(this);
+    this.getSelectedMarks = this.getSelectedMarks.bind(this);
+    this.getEmailsFromMarks = this.getEmailsFromMarks.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
     this.handleMessageChange = this.handleMessageChange.bind(this);
     this.handleSubjectChange = this.handleSubjectChange.bind(this);
@@ -28,33 +30,60 @@ class EmailForm extends Component {
     this.setState({subject: event.target.value});
   }
 
-  async getSelectedEmails() {
-    let selectedEmails = [];
-    const emailField = window.tableau.extensions.settings.get('emailField');
-    if(!emailField) { return []; }
+  async getSelectedMarks() {
+    let selectedMarksDTs = [];
+    // const emailField = window.tableau.extensions.settings.get('emailField');
+    // if(!emailField) { return []; }
     const ext = window.tableau.extensions;
     const worksheets = ext.dashboardContent.dashboard.worksheets;
     const marksPromises = worksheets.map(async ws => {
         const marks = await ws.getSelectedMarksAsync();
-        const dataTable = marks.data[0];
-        const field = dataTable.columns.find( col => col.fieldName === emailField);
-        dataTable.data.map( row => {
-          selectedEmails.push(row[field.index].value);
-        });
+        selectedMarksDTs.push(marks.data[0]);
+        // const dataTable = marks.data[0];
+        // const field = dataTable.columns.find( col => col.fieldName === emailField);
+        // dataTable.data.map( row => {
+        //   selectedEmails.push(row[field.index].value);
+        // });
     });
     await Promise.all(marksPromises);
+    console.log(selectedMarksDTs);
+    return selectedMarksDTs;
+  }
+
+  getEmailsFromMarks(marksDTs) {
+    let selectedEmails = [];
+    const emailField = window.tableau.extensions.settings.get('emailField');
+    if(!emailField) { return []; }
+    for(const DT of marksDTs) {
+      const field = DT.columns.find( col => col.fieldName === emailField);
+      if(field) {
+        DT.data.map( row => {
+          selectedEmails.push(row[field.index].value);
+        });
+      }
+    }
+    //get uniques
+    selectedEmails = [...new Set(selectedEmails)];
+    console.log('selected emails: ', selectedEmails);
     return selectedEmails;
   }
 
   async componentDidMount() {
     await window.tableau.extensions.initializeDialogAsync();
-    const emails = await this.getSelectedEmails();
-    this.setState({ selectedEmails: emails });
+    const marksDTs = await this.getSelectedMarks();
+    const selectedEmails = this.getEmailsFromMarks(marksDTs);
+    this.setState({ 
+      selectedEmails: selectedEmails,
+      selectedMarksDTs: marksDTs 
+    });
   }
   
   async handleSubmit() {
     console.log('submitting: ');
     console.log(this.state);
+    // const subjectPlaceholders = this.findPlaceholders(this.state.subject);
+    // const messagePlaceholders = this.findPlaceholders(this.state.message);
+
     try {
         await axios.post('http://localhost:3030/api/email', {
             to_addresses: this.state.selectedEmails,
