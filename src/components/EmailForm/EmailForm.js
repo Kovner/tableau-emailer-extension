@@ -13,8 +13,7 @@ class EmailForm extends Component {
       subject: '',
       disabled: true,
       buttonMessage: "Send Email",
-      selectedEmails: [],
-      selectedMarksDT: []
+      selectedEmails: []
     };
 
     this.getSelectedMarks = this.getSelectedMarks.bind(this);
@@ -115,30 +114,34 @@ class EmailForm extends Component {
   // }
 
   async handleSubmit(event) {
-    // event.preventDefault();
-    // console.log('submitting: ');
-    // console.log(this.state);
+    event.preventDefault();
+    console.log('submitting: ');
+    console.log(this.state);
 
-    // this.state.selectedMarksDTs
+    let emailPromises = [];
 
-    // try {
-    //     await axios.post('http://localhost:3030/api/email', {
-    //         to_addresses: this.state.selectedEmails,
-    //         from_address: 'mike.kovner@gmail.com',
-    //         subject: this.state.subject,
-    //         message: this.state.message
-    //     });
-    //     this.setState({
-    //       subject: '', 
-    //       message: '', 
-    //       disabled: true,
-    //       buttonMessage: "Email Sent"
-    //     });
-    //     // window.tableau.extensions.ui.closeDialog();
-    // } catch (err) {
-    //     console.error(err.response);
-    //     // window.tableau.extensions.ui.closeDialog();
-    // }
+    const emailField = window.tableau.extensions.settings.get('emailField');
+    if(!emailField) { return []; }
+    const field = this.state.selectedMarksDT.columns.find( col => col.fieldName === emailField);
+    if(field) {
+      this.state.selectedMarksDT.data.map( mark => {
+        emailPromises.push(axios.post('http://localhost:3030/api/email', {  
+          to_addresses: [mark[field.index].value],
+          from_address: 'mike.kovner@gmail.com',
+          subject: this.state.subject,
+          message: this.state.message
+        }));
+      });
+      Promise.all(emailPromises).then( () => {
+        this.setState({
+          subject: '', 
+          message: '', 
+          disabled: true,
+          buttonMessage: "Email Sent"
+        });
+      })
+      .catch(err => console.error(err.response));
+    }
   }
 
   render() {
