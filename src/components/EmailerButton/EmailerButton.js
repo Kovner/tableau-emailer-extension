@@ -14,6 +14,9 @@ class EmailerButton extends Component {
   }
 
   componentDidMount() {
+    window.addEventListener('resize', () =>
+      this.setState({ windowHeight: window.innerHeight })
+    );
     const ext = window.tableau.extensions
     ext.initializeAsync({ configure: this.configure })
       .then(() => {
