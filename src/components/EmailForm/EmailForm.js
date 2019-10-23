@@ -186,7 +186,7 @@ class EmailForm extends Component {
         const generatedMessage = this.fillPlaceholders(this.state.message, mark, columns);
 
         emailPromises.push(axios.post('http://localhost:3030/api/email', {  
-          to_addresses: [mark[field.index].value],
+          to_address: mark[field.index].value,
           from_address: 'mike.kovner@gmail.com',
           subject: generatedSubject,
           message: generatedMessage
