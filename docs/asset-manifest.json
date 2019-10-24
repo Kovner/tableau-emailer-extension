@@ -1,0 +1,17 @@
+{
+  "files": {
+    "main.css": "/tableau-emailer-extension/static/css/main.5dce65d7.chunk.css",
+    "main.js": "/tableau-emailer-extension/static/js/main.bae19af8.chunk.js",
+    "main.js.map": "/tableau-emailer-extension/static/js/main.bae19af8.chunk.js.map",
+    "runtime-main.js": "/tableau-emailer-extension/static/js/runtime-main.15ed3eba.js",
+    "runtime-main.js.map": "/tableau-emailer-extension/static/js/runtime-main.15ed3eba.js.map",
+    "static/css/2.0624914a.chunk.css": "/tableau-emailer-extension/static/css/2.0624914a.chunk.css",
+    "static/js/2.68b66770.chunk.js": "/tableau-emailer-extension/static/js/2.68b66770.chunk.js",
+    "static/js/2.68b66770.chunk.js.map": "/tableau-emailer-extension/static/js/2.68b66770.chunk.js.map",
+    "index.html": "/tableau-emailer-extension/index.html",
+    "precache-manifest.ea1455fb80fa8242dc64d5759aaed135.js": "/tableau-emailer-extension/precache-manifest.ea1455fb80fa8242dc64d5759aaed135.js",
+    "service-worker.js": "/tableau-emailer-extension/service-worker.js",
+    "static/css/2.0624914a.chunk.css.map": "/tableau-emailer-extension/static/css/2.0624914a.chunk.css.map",
+    "static/css/main.5dce65d7.chunk.css.map": "/tableau-emailer-extension/static/css/main.5dce65d7.chunk.css.map"
+  }
+}
