@@ -185,7 +185,7 @@ class EmailForm extends Component {
         const generatedSubject = this.fillPlaceholders(this.state.subject, mark, columns);
         const generatedMessage = this.fillPlaceholders(this.state.message, mark, columns);
 
-        emailPromises.push(axios.post('http://localhost:3030/api/email', {  
+        emailPromises.push(axios.post('https://tableau-emailer-extension.herokuapp.com/api/email', {  
           to_address: mark[field.index].value,
           from_address: 'mike.kovner@gmail.com',
           subject: generatedSubject,
